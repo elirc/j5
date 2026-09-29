@@ -1,0 +1,3 @@
+# id	title	amount	category	date	note
+1	Groceries	42.15	Food	2026-03-01	Weekly shop
+2	Bus pass	thirty	Transport	2026-03-02	

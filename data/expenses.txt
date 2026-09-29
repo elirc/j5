@@ -1,0 +1,7 @@
+# id	title	amount	category	date	note
+1	Groceries	42.15	Food	2026-03-01	Weekly shop
+2	Bus pass	30.00	Transport	2026-03-02	
+3	Coffee beans	12.50	Food	2026-03-03	Gift for\tthe office
+4	Electricity	88.20	Utilities	2026-03-05	February bill
+5	Notebook	3.99	Supplies	2026-03-06	
+6	Cinema	15.00	Leisure	2026-03-07	Two tickets

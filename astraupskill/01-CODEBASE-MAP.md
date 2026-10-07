@@ -2,9 +2,9 @@
 
 Start in [App.java](../src/expensetracker/App.java), specifically `main`. It chooses a file path, creates `ExpenseManager` and `ExpenseFileStorage`, then runs the menu. These constructor calls are a small composition root: the application decides which objects collaborate. A future web server could build the same service and a different adapter, although sharing this manager across request threads would require a concurrency design first.
 
-`App.run` first calls `loadExpenses`. Success allows the menu to start. Failure prints a diagnostic and returns before entering the save-on-exit `finally` block. This order matters: loading a broken file must not initialize an empty session that later overwrites the original. During a valid session, EOF is handled as the end of input. Fully completed changes are saved; a command interrupted halfway through collecting its fields has not yet called the manager.
+`App.run` (`App.java:33`) first calls `loadExpenses` (`App.java:50`). Success allows the menu to start. Failure prints a diagnostic and returns before entering the save-on-exit `finally` block. This order matters: loading a broken file must not initialize an empty session that later overwrites the original. During a valid session, EOF is handled as the end of input. Fully completed changes are saved; a command interrupted halfway through collecting its fields has not yet called the manager.
 
-[ExpenseManager.java](../src/expensetracker/ExpenseManager.java) owns the live `List<Expense>` and `nextId`. Follow these operations:
+[ExpenseManager.java](../src/expensetracker/ExpenseManager.java) owns the live `List<Expense>` and `nextId` (`ExpenseManager.java:19-20`). Follow these operations:
 
 | User action | Manager method | Main result |
 |---|---|---|

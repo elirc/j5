@@ -21,10 +21,11 @@ Copy-Item -LiteralPath .\data\trace-expenses.txt -Destination .\data\trace-corru
 Add-Content -LiteralPath .\data\trace-corrupt.txt -Value 'broken'
 $beforeHash = (Get-FileHash -LiteralPath .\data\trace-corrupt.txt).Hash
 powershell -NoProfile -ExecutionPolicy Bypass -File .\run.ps1 -DataPath .\data\trace-corrupt.txt
+$LASTEXITCODE
 $afterHash = (Get-FileHash -LiteralPath .\data\trace-corrupt.txt).Hash
 $beforeHash -eq $afterHash
 ```
 
-The application should identify the invalid line, stop startup, and leave the file hash unchanged. It should not offer the normal menu or claim that expenses were saved. Keep the valid source copy for recovery. This is fail-closed loading, not an automatic repair feature.
+The application should identify the invalid line, stop startup, and leave the file hash unchanged. It should not offer the normal menu or claim that expenses were saved. Keep the valid source copy for recovery. This is fail-closed loading, not an automatic repair feature. Now look at the `$LASTEXITCODE` line: it prints `0`. `run.ps1` passes on Java's exit status, and `main` returns normally after a refused startup (`App.java:34`), so a script can't tell this run apart from a successful one. Practice exercise 3 closes that gap.
 
 Finally, inspect the [regression suite](../test/expensetracker/RegressionTests.java) and map each observation to a named test. Write a five-sentence review: what input triggered the original loss, which parser boundary changed, why failed updates preserve state, when a successful edit becomes durable, and what would happen if two processes saved different snapshots. If any answer is vague, revisit the relevant method before beginning the HTTP exercise.

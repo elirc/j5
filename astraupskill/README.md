@@ -14,12 +14,12 @@ The useful starting question is: can a user trust that a successfully saved expe
 | identity allocation | Ids handed out once and never reused, even after a delete. | `nextId` in `ExpenseManager.java` |
 | replacement update | An edit builds a new `Expense` and swaps it in, so a rejected edit changes nothing. | `updateExpense` in `ExpenseManager.java` |
 | money precision | Amounts are `BigDecimal`, parsed and scaled once at the boundary. | `parseAmount` in `ExpenseManager.java`, the `amount` field in `Expense.java` |
-| normalization | Categories are trimmed and cased once so grouping is predictable. | `normalizeCategory` in `ExpenseManager.java` |
+| normalization | Categories are trimmed, whitespace-collapsed and title-cased once so grouping is predictable. | `Expense.normalizeCategory` (`Expense.java:66`); the manager's `normalizeCategory` only delegates to it |
 | whole-file validation | One bad line rejects the entire load instead of half-restoring data. | `load()` in `src/expensetracker/ExpenseFileStorage.java` |
 | escaping | Tabs and newlines inside a field are encoded so a record cannot split itself. | `escape`, `unescape` and `splitPreservingEscapes` in `ExpenseFileStorage.java` |
 | empty optional field | A note that is absent must survive a save and reload unchanged. | `hasNote()` in `Expense.java`, the note column in `toLine`/`parseLine` |
 | atomic save | Write a temporary file, then move it over the real one. | `Files.move(temporary, filePath, ATOMIC_MOVE, REPLACE_EXISTING)` in `save()` |
-| commit boundary | The point where memory becomes the file; before it, nothing is durable. | the save menu action in `src/expensetracker/App.java` |
+| commit boundary | The point where memory becomes the file; before it, nothing is durable. | the `finally` block in `App.run` (`App.java:45-46`); menu 7 only ends the loop, and EOF reaches the same block |
 | regression test | A check that fails without the fix and would catch its removal. | `test/expensetracker/RegressionTests.java` |
 
 ## Run and test
@@ -43,6 +43,8 @@ Add Lunch, amount `12.30`, category `food`, date `2026-01-02`, and a blank note.
 4. Run the [testing guide](04-TESTING-AND-DEBUGGING.md) and [trace lab](07-TRACE-LAB.md).
 5. Complete the [practice ladder](05-PRACTICE.md), using [review guidance](06-SOLUTIONS-AND-REVIEW.md) after your own attempt.
 6. Read [verification and limits](VERIFICATION.md) before claiming production readiness.
+
+The practice Checks and the CLI scenario test in chapter 04 share one small `practice/harness.mjs`. It needs only Node 18+ and the JDK, compiles into a temp directory, and never touches your data file.
 
 Allow several focused sessions rather than finishing every exercise at once. A useful review artifact contains the input, expected result, actual observation, relevant source method, and a regression test. Explain why a failed update cannot partly change a stored expense, why a missing file differs from a corrupt file, and why atomic file replacement does not make two simultaneous application instances safe. Those explanations connect this small project to mid-level CRUD development.
 

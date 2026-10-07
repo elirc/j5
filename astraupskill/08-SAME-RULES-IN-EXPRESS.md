@@ -2,7 +2,7 @@
 
 [Course index](README.md)
 
-`ExpenseManager.updateExpense` builds a valid replacement before touching the list, and `ExpenseFileStorage.save` serializes a snapshot to a temp file and moves it atomically. In TypeScript + Express + SQLite the validation becomes a Zod schema and the atomic move becomes a transaction; the rules do not change. About sixty lines:
+`ExpenseManager.updateExpense` builds a valid replacement before touching the list, and `ExpenseFileStorage.save` serializes a snapshot to a temp file and moves it atomically. In TypeScript + Express + SQLite the validation becomes a Zod schema and the atomic move becomes a transaction; the rules are meant to stay the same (the next section shows where this sketch slips). About forty lines:
 
 ```ts
 import express from 'express';
@@ -54,6 +54,23 @@ app.delete('/expenses/:id', (req, res) => {
 | (practice exercise 4) optimistic concurrency | `If-Match` + `WHERE version = ?`, 409 on `changes === 0` |
 | the CLI's confirmation prompt before delete | nothing: the server cannot rely on a client prompt; authorization goes here instead |
 
+## Where the port is not the same rules
+
+"The rules do not change" is the goal, but the sketch above changes four of them. Each difference was checked on 2026-10-06 by running the regex, the transform, and the date predicate in plain Node; the Java behavior comes from the delivered CLI.
+
+| Input | Java CLI | Sketch above | Fix in the port |
+|---|---|---|---|
+| `12.300` | accepted as 12.30 (`setScale` needs no rounding) | 400, because the regex allows only 1-2 decimals | allow trailing zeros, `/^\d+(\.\d+)?$/`, then reject non-zero third decimals |
+| `1e2` | accepted as 100.00 (`ExpenseManager.java:127`) | 400 | keep the port's behavior; it is what practice exercise 2 asks of Java |
+| category ` TRAVEL ` | stored as `Travel` (`Expense.java:66-74`) | stored as `TRAVEL` | add a `.transform()` that applies the same title-casing |
+| `90071992547409.99` | exact (`BigDecimal`) | `9007199254740998`: one cent wrong, because `Number(s) * 100` goes through a double | split on `.` and build cents with `BigInt` or integer string math |
+
+The date predicate behaves like `LocalDate.parse` for the cases tried: `2026-02-30` and `2026-13-01` are rejected, and `2024-02-29` is accepted. Reproduce these checks without installing anything:
+
+```bash
+node -e "const re=/^\d+(\.\d{1,2})?$/; for (const s of ['12.300','1e2','90071992547409.99']) console.log(s, re.test(s), Math.round(Number(s)*100))"
+```
+
 ## Exercise
 
-Write the four tests: invalid amount is 400 and the row is unchanged; unknown id is 404; stale `If-Match` is 409; a good update is 204 and the `ETag` moved. Then load `data/expenses.txt` into the table with one script and prove the escaped-tab note round-trips.
+Set this up in a separate project (`npm i express zod`), not in this repository. Write the four tests: invalid amount is 400 and the row is unchanged; unknown id is 404; stale `If-Match` is 409; a good update is 204 and the `ETag` moved. Then load `data/expenses.txt` into the table with one script and prove the escaped-tab note round-trips.
